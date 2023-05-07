@@ -1,0 +1,8 @@
+Corresponding versioning between GitHub (https://github.com/mateuszrog/Jenkins/tree/mateusz) and DockerHub (https://hub.docker.com/repositories/970922):
+20230427_1.0.16
+20230427_1.0.18
+20230427_1.0.20
+20230428_1.0.21
+20230428_1.0.24
+20230501_1.0.26
+20230503_1.0.34

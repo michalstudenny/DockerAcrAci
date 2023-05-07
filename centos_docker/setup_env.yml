@@ -1,0 +1,194 @@
+---
+- name: Install packages
+  hosts: localhost  
+  vars:
+    state: "latest"
+    common_packages: 
+      - name: "git"
+      - name: "nmap"
+      - name: "zsh"
+      - name: "docker"
+      - name: "docker-compose"
+      - name: "curl"
+      - name: "unzip"
+      - name: "vim"
+      - name: "wireshark"
+      - name: "tcpdump"
+      - name: "telnet"
+      - name: "htop"
+    darwin_packages:
+      - name: "pyenv"
+      - name: "gping"
+      - name: "hping"
+      - name: "colima"
+      - name: "python"
+    darwin_packages_cask:
+      - name: "iterm2"
+      - name: "slack"
+      - name: "visual-studio-code"
+      - name: "google-chrome"
+    centos_packages:
+      # - name: "gping"
+      - name: "hping3"
+      - name: "python"
+      - name: "epel-release"
+      - name: "yum-utils"
+      - name: "net-tools"
+      # - name: "slack-desktop"
+      # - name: "google-chrome-stable"
+      # - name: "visual-studio-code"
+    ubuntu_packages:
+      - name: "software-properties-common"
+      - name: "hping3"
+      # - name: "slack-desktop"
+      - name: "python3"
+      # - name: "visual-studio-code"
+    windows_packages:
+      - name: "visual-studio-code"
+      - name: "slack"
+      - name: "pyenv-win"
+      - name: "python"
+      - name: "google-chrome"
+
+  tasks:
+    - name: Ensuring Homebrew Is Installed
+      tags: macos
+      when: ansible_os_family == "Darwin"
+      stat:
+        path: /usr/local/bin/brew
+      register: homebrew_check
+
+    - name: Installing homebrew
+      tags: macos
+      shell: /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+      shell: /usr/bin/ruby -e "$(curl -fsSL https://slack.com/ssb/download-osx-silicon)"
+      ignore_errors: yes
+      when:
+        - not homebrew_check.stat.exists
+        - ansible_os_family == "Darwin"
+
+    - name: Install core packages via Homebrew Cask
+      tags: macos
+      when: ansible_os_family == "Darwin"
+      homebrew_cask:
+        name: "{{ item.name }}"
+        state: "{{ state }}"
+        install_options: force
+      with_items: "{{ darwin_packages_cask }}"
+
+    - name: Install packages on Darwin
+      tags: macos
+      when: ansible_os_family == "Darwin"
+      homebrew:
+        name: "{{ item.name }}"
+        state: "{{ state }}"
+        install_options: force
+      with_items: 
+        - "{{ common_packages }}"
+        - "{{ darwin_packages }}"
+
+    - name: Install packages on CentOS
+      tags: centos
+      when: ansible_os_family == "RedHat"
+      package:
+        name: "{{ item.name }}"
+        state: "{{ state }}"
+      with_items: 
+        - "{{ common_packages }}"
+        - "{{ centos_packages }}"
+
+    - name: Install packages on Ubuntu
+      tags: ubuntu
+      when: ansible_os_family == "Debian"
+      apt:
+        name: "{{ item.name }}"
+        state: "{{ state }}"
+      with_items: 
+        - "{{ common_packages }}"
+        - "{{ ubuntu_packages }}"
+
+    - name: Install packages on Windows
+      tags: windows
+      when: ansible_os_family == "Windows"
+      win_chocolatey:
+        name: "{{ item.name }}"
+        state: "{{ state }}"
+      with_items: 
+        - "{{ common_packages }}"
+        - "{{ windows_packages }}"
+
+    - name: colima start 
+      tags: macos
+      command: "colima start"
+
+    # - name: install pyenv for ubuntu
+    #   tags: ubuntu
+    #   command: 
+    #     - "curl https://pyenv.run | bash"
+    #     - "export PATH="$HOME/.pyenv/bin:$PATH" && eval "$(pyenv init --path)" && echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n eval "$(pyenv init -)"\nfi' >> ~/.bashrc"
+
+# - name: Build nginx 
+#     shell: |
+#       cd nginx-1.11.13
+#       sudo ./configure
+#       sudo make
+#       sudo make install
+
+# - command: "{{ item }} chdir=/src/package/"
+#   with_items:
+#   - ./configure
+#   - /usr/bin/make
+#   - /usr/bin/make install    
+
+
+    # - name: pyenv installation python
+    #   tags: 
+    #   - macos
+    #   - centos
+    #   - ubuntu
+    #   - windows
+    #   block:
+    #     - name: python v3.8 - latest
+    #       command: 'pyenv install -sv 3.8' 
+    #     - name: python v2.7 - latest
+    #       command: 'pyenv install -sv 2.7'
+    #     - name: python v3.10 - latest
+    #       command: 'pyenv install -sv 3.10.11'
+
+    # - name: install gping for ubuntu
+    #   tags: ubuntu
+    #   command: 
+    #     - "echo "deb http://packages.azlux.fr/debian/ buster main" | sudo tee /etc/apt/sources.list.d/azlux.list"
+    #     - "apt-get install gnupg"
+    #     - "wget -qO - https://azlux.fr/repo.gpg.key | sudo apt-key add -"
+    #     - "apt update"
+    #     - "apt install gping"
+
+    # - name: install visual studio code for ubuntu
+    #   tags: ubuntu
+    #   command: 
+    #     - "sudo apt-get install wget gpg"
+    #     - "wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg"
+    #     - "sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg"
+    #     - "sudo sh -c 'echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list'"
+    #     - "rm -f packages.microsoft.gpg"
+    #     - "sudo apt install apt-transport-https"
+    #     - "sudo apt update"
+    #     - "sudo apt install code"
+
+    # - name: Upgrade CentOS
+    #   tags: centos
+    #   when: ansible_os_family == "RedHat"
+    #   block:
+    #     - name: Check if OS is CentOS 7
+    #       command: cat /etc/centos-release | grep "CentOS Linux 7"
+    #       register: centos7
+    #       failed_when: false
+    #       changed_when: false
+    #     - name: Upgrade to CentOS 8
+    #       command: dnf install -y centos-release-stream
+    #       when: centos7.rc == 0
+    #     - name: Update OS packages
+    #       command: dnf update -y
+    #     - name: Update and upgrade yum
+    #       command: yum update && yum upgrade
