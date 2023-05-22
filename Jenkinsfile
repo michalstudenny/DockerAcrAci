@@ -4,7 +4,7 @@ pipeline {
         environment {
             def BUILDVERSION = sh(script: "echo `date +%Y%m%d`", returnStdout: true).trim()
             def BUILDFULLNAME = "${BUILDVERSION}_1.0.${BUILD_NUMBER}"
-            
+            //test
             //once you create ACR in Azure cloud, use that here
             registryName = "acrdevopslab"
             //- update your credentials ID after creating credentials for connecting to ACR
