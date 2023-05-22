@@ -57,7 +57,7 @@ pipeline {
         }
       }
     }
-//test
+
        // Stopping Docker containers for cleaner Docker run
      stage('stop previous containers') {
          steps {
